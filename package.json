@@ -41,6 +41,7 @@
     }
   },
   "files": [
+    "src/",
     "lib"
   ],
   "engines": {
