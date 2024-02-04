@@ -276,12 +276,34 @@ export async function gptTranslateJson(options: GptTranslateJsonOptions) {
     }
   };
 
+ const objectsToArrays = (obj: any): any => {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+  
+    // Convert children first
+    for (const key in obj) {
+      obj[key] = objectsToArrays(obj[key]);
+    }
+  
+    // Determine if obj is an object that can be converted to an array
+    const keys = Object.keys(obj).map(key => parseInt(key)).filter(key => !isNaN(key)).sort((a, b) => a - b);
+    if (keys.length > 0 && keys[0] === 0 && keys[keys.length - 1] === keys.length - 1) {
+      // It's an array-like object, convert it to an array
+      return keys.map(key => obj[key]);
+    }
+  
+    return obj;
+  };
+
   const writeAsset = async (translation: Translation, filename: string, lang: string) => {
     const baseAssets = normalize(`${resolvedOptions.basePath}/${resolvedOptions.assetsPath}/${lang}`);
     if (!existsSync(baseAssets)) {
       mkdirSync(baseAssets, { recursive: true });
     }
-    const data = toJsonString(translation);
+
+    const finalJson = objectsToArrays(translation);
+    const data = toJsonString(finalJson);//translation);
     const file = normalize(`${baseAssets}/${filename}`);
     await writeFile(file, data);
     // Log
